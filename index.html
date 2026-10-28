@@ -83,13 +83,15 @@
   button:hover:not(:disabled) { background: #1e3c72; }
   button:disabled { opacity: .45; cursor: not-allowed; }
 
-  /* 行動裝置:窄螢幕時紀錄改為直向排列,避免三個欄位擠在一行 */
+  /* 行動裝置:窄螢幕時縮小字級與間距,紀錄維持單列顯示 */
   @media (max-width: 480px) {
     body { padding: 16px 12px; }
     .panel { padding: 20px 16px; }
     #records li {
-      flex-direction: column;
       gap: 4px;
+      padding: 10px 8px;
+      font-size: .85rem;
+      flex-wrap: nowrap;
     }
   }
 </style>
