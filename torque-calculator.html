@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扳手扭力誤差計算器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(180deg, #5ff5b1 0%, #2fbf94 30%, #1c5a6e 65%, #a3aee0 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+    color: #222;
+  }
+  .panel {
+    width: 100%;
+    max-width: 520px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 20px; text-align: center; letter-spacing: .02em; }
+
+  /* 紀錄區(顯示在最上方) */
+  #records { list-style: none; margin-bottom: 20px; }
+  #records li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    background: #f2f5fa;
+    font-size: .95rem;
+    animation: fadeIn .25s ease;
+  }
+  #records li .err { font-weight: 600; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; } }
+  .empty-hint { color: #999; text-align: center; margin-bottom: 20px; font-size: .9rem; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: .9rem; margin-bottom: 6px; color: #444; }
+  .field input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1rem;
+    border: 1.5px solid #ccc;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus { border-color: #2a5298; }
+
+  .result {
+    text-align: center;
+    font-size: .95rem;
+    color: #555;
+    padding: 14px;
+    border-radius: 10px;
+    background: #f7f9fc;
+    margin-bottom: 16px;
+  }
+  .result strong { font-size: 2rem; color: #1e3c72; }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #fff;
+    background: #2a5298;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background .15s, opacity .15s;
+  }
+  button:hover:not(:disabled) { background: #1e3c72; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* 行動裝置:窄螢幕時紀錄改為直向排列,避免三個欄位擠在一行 */
+  @media (max-width: 480px) {
+    body { padding: 16px 12px; }
+    .panel { padding: 20px 16px; }
+    #records li {
+      flex-direction: column;
+      gap: 4px;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <h1>🔧 扳手扭力誤差計算器</h1>
+
+    <ul id="records"></ul>
+    <p id="emptyHint" class="empty-hint">尚無紀錄,輸入數值後按下「新增紀錄」</p>
+
+    <div class="field">
+      <label for="wrench">扳手扭力</label>
+      <input type="number" id="wrench" inputmode="decimal" step="any" min="0" placeholder="請輸入數字">
+    </div>
+    <div class="field">
+      <label for="instrument">儀器扭力</label>
+      <input type="number" id="instrument" inputmode="decimal" step="any" min="0" placeholder="請輸入數字">
+    </div>
+
+    <div class="result">扳手誤差:<strong id="errorValue">—</strong></div>
+
+    <button id="addBtn" disabled>新增紀錄</button>
+  </div>
+
+<script>
+  const wrenchInput = document.getElementById('wrench');
+  const instrumentInput = document.getElementById('instrument');
+  const errorValue = document.getElementById('errorValue');
+  const addBtn = document.getElementById('addBtn');
+  const recordsList = document.getElementById('records');
+  const emptyHint = document.getElementById('emptyHint');
+  const MAX_RECORDS = 10;
+
+  let currentError = null; // 目前動態計算出的誤差(取到小數第 2 位),無效時為 null
+
+  function update() {
+    const wrench = parseFloat(wrenchInput.value);
+    const instrument = parseFloat(instrumentInput.value);
+
+    // 兩欄都必須是有效數字,且儀器扭力不可為 0
+    if (Number.isFinite(wrench) && Number.isFinite(instrument) && instrument !== 0) {
+      currentError = Math.round((wrench / instrument - 1) * 10000) / 100;
+      errorValue.textContent = (currentError > 0 ? '+' : '') + currentError.toFixed(2) + ' %';
+      addBtn.disabled = false;
+    } else {
+      currentError = null;
+      errorValue.textContent = '—';
+      addBtn.disabled = true;
+    }
+  }
+
+  function addRecord() {
+    if (currentError === null) return;
+
+    const li = document.createElement('li');
+    const errText = (currentError > 0 ? '+' : '') + currentError.toFixed(2) + ' %';
+    li.innerHTML =
+      `<span>扳手扭力:${wrenchInput.value}</span>` +
+      `<span>儀器扭力:${instrumentInput.value}</span>` +
+      `<span class="err">誤差 ${errText}</span>`;
+    recordsList.appendChild(li);
+
+    // 超過 10 筆時移除最前面一筆
+    while (recordsList.children.length > MAX_RECORDS) {
+      recordsList.removeChild(recordsList.firstElementChild);
+    }
+
+    emptyHint.style.display = 'none';
+    wrenchInput.value = '';
+    instrumentInput.value = '';
+    wrenchInput.focus();
+    update();
+  }
+
+  wrenchInput.addEventListener('input', update);
+  instrumentInput.addEventListener('input', update);
+  addBtn.addEventListener('click', addRecord);
+  // Enter 鍵直接新增
+  [wrenchInput, instrumentInput].forEach(el =>
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' && !addBtn.disabled) addRecord(); })
+  );
+</script>
+</body>
+</html>
