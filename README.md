@@ -22,7 +22,7 @@
 不需安裝任何東西,直接用瀏覽器開啟即可:
 
 ```
-torque-calculator.html
+index.html
 ```
 
 雙擊檔案,或拖曳到任一現代瀏覽器(Chrome、Edge、Firefox、Safari)中使用。
@@ -31,5 +31,5 @@ torque-calculator.html
 
 | 檔案 | 說明 |
 | --- | --- |
-| `torque-calculator.html` | 主程式,HTML + CSS + JavaScript 全部在一起,無外部依賴 |
+| `index.html` | 主程式,HTML + CSS + JavaScript 全部在一起,無外部依賴 |
 | `849773035_17994114282109195_6022418084571625079_n.jpg` | 背景配色的參考圖片 |
